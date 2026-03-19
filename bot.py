@@ -28,7 +28,7 @@ cursor.execute('''
         user_id INTEGER PRIMARY KEY,
         username TEXT,
         first_name TEXT,
-        balance INTEGER DEFAULT 100,
+        balance INTEGER DEFAULT 90,
         total_clicks INTEGER DEFAULT 0,
         best_combo INTEGER DEFAULT 0,
         chests_opened INTEGER DEFAULT 0,
@@ -53,8 +53,6 @@ conn.commit()
 
 # ========== ФАКТЫ ==========
 FACTS = [
-   
-    # Новые факты про разработку (10)
     "👨‍💻 Игра была создана всего за 30 дней одним разработчиком!",
     "☕ Разработчик выпил 50 литров чая пока делал эту игру",
     "🐛 В бета-тесте нашли и исправили 19+ багов",
@@ -63,11 +61,8 @@ FACTS = [
     "📱 FPV Bank работает на всех устройствах с Telegram",
     "⚡️ Сервер бота находится в США, но играет быстро везде",
     "🔄 База данных переписывалась 3 раза с нуля",
-    "🔄 Код игры переписывался 3 раза с нуля",
     "🎨 Дизайн игры переделывали 5 раз пока не стало красиво",
     "🤝 Никто не верил в успех, но игра работает!",
-    
-    # Про игроков и статистику (10)
     "👥 В игре уже зарегистрировано 100+ пилотов",
     "🖱️ Все игроки сделали более 100000 тысяч кликов",
     "💰 В сумме заработано 10 миллионов FPV",
@@ -128,14 +123,14 @@ def update_stats(user_id, clicks=0, combo=0, chests=0, games=0):
     ''', (clicks, combo, chests, games, user_id))
     conn.commit()
 
-def add_history(user_id, action, amount, details=''):
+def add_history(user_id, action, amount, details):
     cursor.execute('''
         INSERT INTO history (user_id, action, amount, details, date)
         VALUES (?, ?, ?, ?, ?)
     ''', (user_id, action, amount, details, datetime.now()))
     conn.commit()
 
-def get_history(user_id, limit=5):
+def get_history(user_id, limit=10):
     cursor.execute('''
         SELECT action, amount, details, date FROM history 
         WHERE user_id = ? ORDER BY date DESC LIMIT ?
@@ -169,7 +164,7 @@ def update_daily_streak(user_id):
 # ========== КЛАВИАТУРЫ ==========
 def get_main_keyboard():
     builder = InlineKeyboardBuilder()
-    builder.row(InlineKeyboardButton(text="🚀 ИГРАТЬ", web_app=WebAppInfo(url=GAME_URL)))
+    builder.row(InlineKeyboardButton(text="🚀 ЗАПУСТИТЬ ИГРУ", web_app=WebAppInfo(url=GAME_URL)))
     builder.row(
         InlineKeyboardButton(text="📢", url=CHANNEL_URL),
         InlineKeyboardButton(text="ℹ️", callback_data="about"),
@@ -209,29 +204,35 @@ async def cmd_start(message: types.Message):
     user = get_user(user_id)
     if not user:
         create_user(user_id, username, first_name)
-        update_balance(user_id, 100)
-        add_history(user_id, 'start', 100, 'Стартовый бонус')
+        update_balance(user_id, 90)
+        add_history(user_id, 'start', 0, 'Запустил бота')
     
     streak = update_daily_streak(user_id)
     if streak > 1:
-        add_history(user_id, 'daily_streak', 50, f'День {streak}')
+        add_history(user_id, 'daily_streak', 50, f'Ежедневный бонус (день {streak})')
         update_balance(user_id, 50)
     
     text = (
-        "━━━━━━━━━━━━━━━━━━━━\n"
-        "   🚁 FPV BANK GAME\n"
-        "━━━━━━━━━━━━━━━━━━━━\n"
-        "v2.0 beta · 03.2026\n\n"
-        "───────── ОСНОВНЫЕ ФИЧИ ───────\n"
-        "• Кликер\n"
-        "• Компаньоны 🐉\n"
-        "• Кейсы 🎲\n"
-        "• Мини-игры 🎮\n"
-        "• Бонусы 🎁\n\n"
-        "───────── ЗАПУСК ─────────────\n"
-        "   [ 🚀 ИГРАТЬ ]\n\n"
-        "───────── НАВИГАЦИЯ ───────────\n"
-        "📢      ℹ️      ❓      📜"
+        "━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "     🚁 FPV BANK GAME    \n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "        v2.0 beta        \n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "          \n"
+        "🖱️  КЛИКЕР\n"
+        "🐉  КОМПАНЬОНЫ\n"
+        "🎲  КЕЙСЫ\n"
+        "🎮  МИНИ-ИГРЫ\n"
+        "🎁  БОНУСЫ\n"
+        "          \n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "   🔥 ПОЧЕМУ СЕЙЧАС? 🔥\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "✓ Бонус 90 FPV при регистрации\n"
+        "✓ Удвоенные шансы в кейсах\n"
+        "✓ Эксклюзивный компаньон для первых 100\n"
+        "✓ Бета-доступ уже открыт\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━"
     )
     
     await message.answer(text, reply_markup=get_main_keyboard())
@@ -239,6 +240,9 @@ async def cmd_start(message: types.Message):
 # ========== О ИГРЕ ==========
 @dp.callback_query(lambda c: c.data == 'about')
 async def show_about(callback: types.CallbackQuery):
+    user_id = callback.from_user.id
+    add_history(user_id, 'about', 0, 'Открыл раздел "О игре"')
+    
     text = (
         "╭────────────────────────╮\n"
         "│   🚁 FPV BANK GAME     │\n"
@@ -277,8 +281,11 @@ async def show_about(callback: types.CallbackQuery):
 # ========== ФАКТ ==========
 @dp.callback_query(lambda c: c.data == 'fact')
 async def show_fact(callback: types.CallbackQuery):
+    user_id = callback.from_user.id
     fact_number = random.randint(1, len(FACTS))
     fact = random.choice(FACTS)
+    
+    add_history(user_id, 'fact', 0, f'Открыл факт #{fact_number}')
     
     text = (
         "━━━━━━━━━━━━━━━━━━━━\n"
@@ -300,48 +307,72 @@ async def show_history(callback: types.CallbackQuery):
     history = get_history(user_id)
     balance = get_balance(user_id)
     
+    add_history(user_id, 'history', 0, 'Посмотрел историю действий')
+    
     text = (
         "━━━━━━━━━━━━━━━━━━━━\n"
-        "   📜 ТВОИ ДЕЙСТВИЯ\n"
+        "   📜 ИСТОРИЯ ДЕЙСТВИЙ\n"
         "━━━━━━━━━━━━━━━━━━━━\n\n"
-        "⏱️ Последние 5 операций:\n\n"
+        "⏱️ Последние действия в боте:\n\n"
     )
     
     if not history:
         text += (
-            "😢 У тебя пока нет операций\n\n"
-            "🚀 Нажми 'ИГРАТЬ' и начни\n"
-            "зарабатывать монеты!\n\n"
+            "😢 История пока пуста\n\n"
+            "👇 Нажимай на кнопки, чтобы\n"
+            "она начала заполняться!"
         )
     else:
-        for action, amount, details, date in history:
-            date_str = date.split('.')[0] if isinstance(date, str) else str(date)
-            
-            if amount > 0:
-                emoji = "🟢"
-                sign = f"+{amount}"
+        for action, amount, details, date in history[:8]:
+            # Парсим время
+            if isinstance(date, str):
+                try:
+                    date_obj = datetime.fromisoformat(date)
+                    now = datetime.now()
+                    diff = now - date_obj
+                    
+                    if diff.seconds < 60:
+                        time_str = "только что"
+                    elif diff.seconds < 3600:
+                        minutes = diff.seconds // 60
+                        time_str = f"{minutes} мин назад"
+                    elif diff.seconds < 86400:
+                        hours = diff.seconds // 3600
+                        time_str = f"{hours} ч назад"
+                    else:
+                        days = diff.days
+                        time_str = f"{days} дн назад"
+                except:
+                    time_str = "недавно"
             else:
-                emoji = "🔴"
-                sign = f"{amount}"
+                time_str = "недавно"
             
-            if 'Клик' in action:
-                icon = "🖱️"
-            elif 'Кейс' in action:
-                icon = "📦"
-            elif 'Компаньон' in action or 'компаньон' in details:
-                icon = "🐉"
-            elif 'Игра' in action or 'игре' in details:
-                icon = "🎮"
-            elif 'Бонус' in action or 'стрик' in action:
-                icon = "🎁"
+            # Эмодзи для разных действий
+            if 'запустил игру' in details.lower() or '🚀' in details:
+                emoji = "🚀"
+            elif 'о игре' in details.lower() or 'about' in action:
+                emoji = "ℹ️"
+            elif 'факт' in details.lower():
+                emoji = "❓"
+            elif 'история' in details.lower():
+                emoji = "📜"
+            elif 'канал' in details.lower() or 'channel' in action:
+                emoji = "📢"
+            elif 'назад' in details.lower():
+                emoji = "◀️"
+            elif 'start' in action or 'бота' in details.lower():
+                emoji = "🤖"
+                if 'запустил бота' not in details.lower():
+                    details = 'Запустил бота'
+            elif 'бонус' in details.lower():
+                emoji = "🎁"
             else:
-                icon = "💰"
+                emoji = "🔄"
             
-            text += f"{emoji} {icon} {details or action}\n"
-            text += f"   {sign} FPV\n\n"
+            text += f"{emoji} {time_str} — {details}\n"
     
-    text += f"───────── БАЛАНС ───────────\n"
-    text += f"💰 Текущий: {balance} FPV\n"
+    text += f"\n───────── БАЛАНС ───────────\n"
+    text += f"💰 Текущий: {balance} FPV"
     
     await callback.message.edit_text(text, reply_markup=get_history_keyboard())
     await callback.answer()
@@ -349,6 +380,8 @@ async def show_history(callback: types.CallbackQuery):
 # ========== НАЗАД ==========
 @dp.callback_query(lambda c: c.data == 'back')
 async def go_back(callback: types.CallbackQuery):
+    user_id = callback.from_user.id
+    add_history(user_id, 'back', 0, 'Вернулся в главное меню')
     await cmd_start(callback.message)
     await callback.answer()
 
