@@ -112,17 +112,6 @@ def get_balance(user_id):
     result = cursor.fetchone()
     return result[0] if result else 0
 
-def update_stats(user_id, clicks=0, combo=0, chests=0, games=0):
-    cursor.execute('''
-        UPDATE users SET 
-            total_clicks = total_clicks + ?,
-            best_combo = MAX(best_combo, ?),
-            chests_opened = chests_opened + ?,
-            games_played = games_played + ?
-        WHERE user_id = ?
-    ''', (clicks, combo, chests, games, user_id))
-    conn.commit()
-
 def add_history(user_id, action, amount, details):
     cursor.execute('''
         INSERT INTO history (user_id, action, amount, details, date)
@@ -213,26 +202,24 @@ async def cmd_start(message: types.Message):
         update_balance(user_id, 50)
     
     text = (
-        "━━━━━━━━━━━━━━━━━━━━━━━━\n"
-        "     🚁 FPV BANK GAME    \n"
-        "━━━━━━━━━━━━━━━━━━━━━━━━\n"
-        "        v2.0 beta        \n"
-        "━━━━━━━━━━━━━━━━━━━━━━━━\n"
-        "          \n"
-        "🖱️  КЛИКЕР\n"
-        "🐉  КОМПАНЬОНЫ\n"
-        "🎲  КЕЙСЫ\n"
-        "🎮  МИНИ-ИГРЫ\n"
-        "🎁  БОНУСЫ\n"
-        "          \n"
-        "━━━━━━━━━━━━━━━━━━━━━━━━\n"
-        "   🔥 ПОЧЕМУ СЕЙЧАС? 🔥\n"
-        "━━━━━━━━━━━━━━━━━━━━━━━━\n"
-        "✓ Бонус 90 FPV при регистрации\n"
-        "✓ Удвоенные шансы в кейсах\n"
-        "✓ Эксклюзивный компаньон для первых 100\n"
-        "✓ Бета-доступ уже открыт\n"
-        "━━━━━━━━━━━━━━━━━━━━━━━━"
+        "╔══════════════════════╗\n"
+        "║    🚁 FPV BANK GAME   ║\n"
+        "╠══════════════════════╣\n"
+        "║      v2.0 beta        ║\n"
+        "╠══════════════════════╣\n"
+        "║ 🖱️  КЛИКЕР            ║\n"
+        "║ 🐉  КОМПАНЬОНЫ        ║\n"
+        "║ 🎲  КЕЙСЫ             ║\n"
+        "║ 🎮  МИНИ-ИГРЫ         ║\n"
+        "║ 🎁  БОНУСЫ            ║\n"
+        "╠══════════════════════╣\n"
+        "║   🔥 ПОЧЕМУ СЕЙЧАС?   ║\n"
+        "╠══════════════════════╣\n"
+        "║ ✓ Бонус 90 FPV        ║\n"
+        "║ ✓ Удвоенные шансы     ║\n"
+        "║ ✓ Эксклюзивный комп   ║\n"
+        "║ ✓ Бета-доступ открыт  ║\n"
+        "╚══════════════════════╝"
     )
     
     await message.answer(text, reply_markup=get_main_keyboard())
@@ -244,30 +231,28 @@ async def show_about(callback: types.CallbackQuery):
     add_history(user_id, 'about', 0, 'Открыл раздел "О игре"')
     
     text = (
-        "╭────────────────────────╮\n"
-        "│   🚁 FPV BANK GAME     │\n"
-        "│   РАССКАЗЫВАЕМ         │\n"
-        "╰────────────────────────╯\n\n"
+        "╔════════════════════════════╗\n"
+        "║    🚁 FPV BANK GAME        ║\n"
+        "║    РАССКАЗЫВАЕМ            ║\n"
+        "╚════════════════════════════╝\n\n"
         "👋 Привет! Это FPV Bank.\n\n"
-        "───────── ЧТО ЗА ИГРА? ───────\n"
+        "▸ ЧТО ЗА ИГРА?\n"
         "Мы сделали кликер про дронов.\n"
-        "Ты просто кликаешь по дрону,\n"
-        "а он приносит тебе монеты.\n"
-        "Чем больше кликаешь — тем\n"
-        "больше зарабатываешь!\n\n"
-        "───────── КАК ИГРАТЬ? ────────\n"
-        "🖱️  Кликай по дрону — получай FPV\n"
-        "⚡️ 10+ быстрых кликов = x2 доход\n"
-        "🔥 Следи за перегревом (красная шкала)\n"
-        "🔋 Энергия восстанавливается со временем\n"
-        "💰 Копи монеты и покупай апгрейды\n\n"
-        "───────── ЧТО ТУТ ЕСТЬ? ───────\n"
-        "🖱️  Кликер (энергия, перегрев, комбо)\n"
-        "🐉  Компаньоны (помогают зарабатывать)\n"
-        "🎲  Кейсы (удача, азарт, шансы)\n"
-        "🎮  Мини-игры (отдохни от кликов)\n"
-        "🎁  Бонусы и промокоды\n\n"
-        "───────── НОВОСТИ ──────────────\n"
+        "Ты кликаешь по дрону,\n"
+        "а он приносит монеты.\n\n"
+        "▸ КАК ИГРАТЬ?\n"
+        "🖱️ Кликай — получай FPV\n"
+        "⚡️ 10+ кликов = x2 доход\n"
+        "🔥 Следи за перегревом\n"
+        "🔋 Энергия восстанавливается\n"
+        "💰 Копи монеты на апгрейды\n\n"
+        "▸ ЧТО ЕСТЬ В ИГРЕ?\n"
+        "🖱️ Кликер\n"
+        "🐉 Компаньоны (7 видов)\n"
+        "🎲 Кейсы (6 видов)\n"
+        "🎮 Мини-игры (3 шт)\n"
+        "🎁 Бонусы и промокоды\n\n"
+        "▸ НОВОСТИ\n"
         "📢 Канал: @fpv_bank_game_channel\n"
         "📅 Запуск: Март 2026\n"
         "⭐️ Версия: 2.0 (бета)\n"
@@ -288,9 +273,9 @@ async def show_fact(callback: types.CallbackQuery):
     add_history(user_id, 'fact', 0, f'Открыл факт #{fact_number}')
     
     text = (
-        "━━━━━━━━━━━━━━━━━━━━\n"
-        "   🚁 ЗНАЕШЬ ЛИ ТЫ?\n"
-        "━━━━━━━━━━━━━━━━━━━━\n\n"
+        "╔════════════════════════╗\n"
+        "║    🚁 ЗНАЕШЬ ЛИ ТЫ?     ║\n"
+        "╚════════════════════════╝\n\n"
         f"📚 ФАКТ #{fact_number}\n\n"
         f"{fact}\n\n"
         "⚡️ Хочешь побить рекорд?\n"
@@ -305,23 +290,18 @@ async def show_fact(callback: types.CallbackQuery):
 async def show_history(callback: types.CallbackQuery):
     user_id = callback.from_user.id
     history = get_history(user_id)
-    balance = get_balance(user_id)
     
     add_history(user_id, 'history', 0, 'Посмотрел историю действий')
     
     text = (
-        "━━━━━━━━━━━━━━━━━━━━\n"
-        "   📜 ИСТОРИЯ ДЕЙСТВИЙ\n"
-        "━━━━━━━━━━━━━━━━━━━━\n\n"
-        "⏱️ Последние действия в боте:\n\n"
+        "╔════════════════════════╗\n"
+        "║   📜 ИСТОРИЯ ДЕЙСТВИЙ   ║\n"
+        "╚════════════════════════╝\n\n"
+        "⏱️ Последние действия:\n\n"
     )
     
     if not history:
-        text += (
-            "😢 История пока пуста\n\n"
-            "👇 Нажимай на кнопки, чтобы\n"
-            "она начала заполняться!"
-        )
+        text += "😢 История пока пуста"
     else:
         for action, amount, details, date in history[:8]:
             # Парсим время
@@ -348,31 +328,27 @@ async def show_history(callback: types.CallbackQuery):
                 time_str = "недавно"
             
             # Эмодзи для разных действий
-            if 'запустил игру' in details.lower() or '🚀' in details:
+            if 'запустил игру' in details.lower():
                 emoji = "🚀"
-            elif 'о игре' in details.lower() or 'about' in action:
+            elif 'о игре' in details.lower():
                 emoji = "ℹ️"
             elif 'факт' in details.lower():
                 emoji = "❓"
             elif 'история' in details.lower():
                 emoji = "📜"
-            elif 'канал' in details.lower() or 'channel' in action:
+            elif 'канал' in details.lower():
                 emoji = "📢"
             elif 'назад' in details.lower():
                 emoji = "◀️"
-            elif 'start' in action or 'бота' in details.lower():
+            elif 'запустил бота' in details.lower():
                 emoji = "🤖"
-                if 'запустил бота' not in details.lower():
-                    details = 'Запустил бота'
+                details = 'Запустил бота'
             elif 'бонус' in details.lower():
                 emoji = "🎁"
             else:
                 emoji = "🔄"
             
             text += f"{emoji} {time_str} — {details}\n"
-    
-    text += f"\n───────── БАЛАНС ───────────\n"
-    text += f"💰 Текущий: {balance} FPV"
     
     await callback.message.edit_text(text, reply_markup=get_history_keyboard())
     await callback.answer()
